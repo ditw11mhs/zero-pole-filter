@@ -3,7 +3,7 @@ import streamlit as st
 from numba import jit, njit
 
 
-@jit(forceobj=True)
+# @jit(forceobj=True)
 def _dft(waves, fs):
     """
     Discrete Fourier Transform.
@@ -28,14 +28,14 @@ def _dft(waves, fs):
     return wave_dft
 
 
-@jit(forceobj=True)
-def _filtered_waves(raw_waves, theta, r_pol, r_zero, fs, N):
+# @jit(forceobj=True)
+def _filtered_waves(raw_waves, theta_pole,theta_zero, r_pol, r_zero, fs, N):
     coef = np.array(
         [
             1,
-            -2 * r_zero * np.cos(theta),
-            r_zero ** 2,
-            2 * r_pol * np.cos(theta),
+            -2*r_zero*np.cos(theta_zero),
+            r_zero**2,
+            2 * r_pol * np.cos(theta_pole),
             -(r_pol ** 2),
         ]
     ).reshape(-1, 1)
@@ -51,8 +51,8 @@ def _filtered_waves(raw_waves, theta, r_pol, r_zero, fs, N):
     return {"Filtered Waves": y[2:], "Time": t}
 
 
-@jit(forceobj=True)
-def _filter_omega(theta, r_pol, r_zero, fs, N):
+# @jit(forceobj=True)
+def _filter_omega(theta_pole,theta_zero, r_pol, r_zero, fs, N):
     n = np.arange(0, N).reshape(1, -1)
     f = n * fs / N
     omega = 2 * np.pi * n / N
@@ -60,15 +60,27 @@ def _filter_omega(theta, r_pol, r_zero, fs, N):
     e_mat = np.exp(-1j * omega * coef)
 
     # Zero
-    zero_coef = np.array([-2 * r_zero * np.cos(theta), r_zero ** 2]).reshape(1, -1)
+    zero_coef = np.array([-2*r_zero*np.cos(theta_zero), r_zero**2]).reshape(1, -1)
     zero = 1 + np.dot(zero_coef, e_mat)
 
     # Pole
-    pole_coef = np.array([-2 * r_pol * np.cos(theta), r_pol ** 2]).reshape(1, -1)
+    pole_coef = np.array([-2 * r_pol * np.cos(theta_pole), r_pol ** 2]).reshape(1, -1)
     pole = 1 + np.dot(pole_coef, e_mat)
 
     h_omega = zero / pole
     h_omega_abs = np.absolute(h_omega)
+
+    # h_omega_2 = np.sqrt(
+    #     np.square(1 + 2 * np.cos(omega) + np.cos(2 * omega))
+    #     + np.square(-2 * np.sin(omega) - np.sin(2 * omega))
+    # ) / np.sqrt(
+    #     np.square(1 - 2 * r_pol * np.cos(theta_pole) * np.cos(omega))
+    #     + np.square(
+    #         2 * r_pol * np.cos(theta_pole) * np.sin(omega)
+    #         - (r_pol ** 2) * np.sin(2 * omega)
+    #     )
+    # )
+    # print(np.sum(h_omega_abs.flatten()-h_omega_2.flatten()))
     return {
         "Gain": np.array_split(h_omega_abs.flatten(), 2)[0],
         "Frequency": np.array_split(f.flatten(), 2)[0],
@@ -120,11 +132,13 @@ class ZeroPoleFilter:
         Filter the raw waves with a given filter state.
         """
         # Get Filtered Waves
-        theta = filter_state["Cutoff Frequency"] * 2 * np.pi / fs
+        theta_pole = filter_state["Cutoff Frequency"] * 2 * np.pi / fs
+        theta_zero = np.radians(filter_state["Zero Angle"])
         r_pol = filter_state["Pole Radius"]
         r_zero = filter_state["Zero Radius"]
+
         filtered_waves = _filtered_waves(
-            raw_waves, theta, r_pol, r_zero, fs, len(raw_waves)
+            raw_waves, theta_pole,theta_zero, r_pol, r_zero, fs, len(raw_waves)
         )
 
         # Get Filtered Waves DFT
@@ -133,21 +147,21 @@ class ZeroPoleFilter:
         # Get Pole Zero Diagram
         pole_zero = {
             "X Axis": [
-                r_zero * np.cos(theta),
-                r_zero * np.cos(theta),
-                r_pol * np.cos(theta),
-                r_pol * np.cos(theta),
+                r_zero * np.cos(theta_zero),
+                r_zero * np.cos(theta_zero),
+                r_pol * np.cos(theta_pole),
+                r_pol * np.cos(theta_pole),
             ],
             "Y Axis": [
-                r_zero * np.sin(theta),
-                -r_zero * np.sin(theta),
-                r_pol * np.sin(theta),
-                -r_pol * np.sin(theta),
+                r_zero * np.sin(theta_zero),
+                -r_zero * np.sin(theta_zero),
+                r_pol * np.sin(theta_pole),
+                -r_pol * np.sin(theta_pole),
             ],
             "Type": ["white", "white", "white", "white"],
         }
 
         # Get H(omega)
-        filter_omega = _filter_omega(theta, r_pol, r_zero, fs, len(raw_waves))
+        filter_omega = _filter_omega(theta_pole,theta_zero, r_pol, r_zero, fs, len(raw_waves))
 
         return filtered_waves, filtered_waves_dft, pole_zero, filter_omega

@@ -11,14 +11,56 @@ class Main(ZeroPoleFilter):
         pass
 
     def main(self):
+
         st.set_page_config(
             page_title="Zero Pole Filter",
             page_icon="⭕",
             layout="wide",
             initial_sidebar_state="expanded",
         )
-        st.title("Zero Pole Filter")
+        st.title("LPF Zero Pole Filter")
         c1, c2 = st.columns(2)
+
+        with c1.expander("LPF H(z)"):
+            st.subheader("LPF H(z)")
+            st.latex(
+                r"H(z) = \frac{(z+1)(z+1)}{(z-re^{\mathit{j\theta}})(z-re^{\mathit{-j\theta}})}"
+            )
+            st.latex(
+                r"= \frac{(z+1)(z+1)}{z^{2}-zr(e^{\mathit{j\theta}}+e^\mathit{-j\theta})+r^2}"
+            )
+            st.latex(
+                r"= \frac{z^2+2z+1}{z^{2}-zr(cos\theta+jsin\theta+cos\theta-jsin\theta)+r^2}"
+            )
+            st.latex(r"= \frac{z^2+2z+1}{z^{2}-2zrcos\theta+r^2}")
+            st.latex(r"= \frac{1+2z^{-1}+z^{-2}}{1-2rcos\theta z^{-1}+r^{2}z^{-2}}")
+
+        with c1.expander("Filter Equation"):
+            st.subheader("Filter Equation")
+            st.latex(r"y[n]=x[n]+2x[n-1]+x[n-2]+2rcos{\theta}y[n-1]-r^{2}y[n-2]")
+
+        with c2.expander("LPF Frequency Response"):
+            st.subheader("LPF Frequency Response")
+            st.latex(r"H(\Omega )=H(z)|z=e^{j\Omega}")
+            st.latex(
+                r"=\frac{1+2z^{-1}+z^{-2}}{1-2rcos\theta z^{-1}+r^{2}z^{-2}}|z=e^{j\Omega}"
+            )
+            st.latex(
+                r"=\frac{1+2(cos\Omega-jsin\Omega)+cos2\Omega-jsin2\Omega}{1-2rcos\theta (cos\Omega-jsin\Omega)+r^{2}(cos2\Omega-jsin2\Omega)}"
+            )
+            st.latex(
+                r"=\frac{1+2cos\Omega+cos2\Omega-j(2sin\Omega+sin2\Omega)}{1-2rcos\theta cos\Omega+ r^{2}cos{2\Omega}+j(2rcos{\theta}sin{\Omega}-r^{2}sin{2\Omega})}"
+            )
+            st.latex(
+                r"H|(\Omega)|=\frac{\sqrt{(1+2cos\Omega+cos2\Omega)^{2}+(-2sin\Omega-sin2\Omega)^{2}}}{\sqrt{(1-2rcos\theta cos\Omega+ r^{2}cos{2\Omega})^{2}+(2rcos{\theta}sin{\Omega}-r^{2}sin{2\Omega})^{2}}}"
+            )
+
+        with c2.expander("LPF Phase Response"):
+            st.subheader("LPF Phase Response")
+            st.latex(
+                r"\phi=arctan\frac{-2sin\Omega-sin2\Omega}{1+2cos\Omega+cos2\Omega}-arctan\frac{2rcos{\theta}sin{\Omega}-r^{2}sin{2\Omega}}{1-2rcos\theta cos\Omega+ r^{2}cos{2\Omega}}"
+            )
+
         form_container = st.sidebar.container()
         wave_state, filter_state = self._create_form(form_container)
         self.plot_color = "cyan"
@@ -203,7 +245,10 @@ class Main(ZeroPoleFilter):
             "Pole Radius", min_value=0.0, max_value=1.0, value=0.5
         )
         filter_state["Zero Radius"] = wave_form.number_input(
-            "Zero Radius", min_value=0.0, max_value=1.0, value=1.0
+            "Pole Radius", min_value=0.0, max_value=1.0, value=1.0
+        )
+        filter_state["Zero Angle"] = wave_form.number_input(
+            "Zero Angle", min_value=0.0, max_value=180.0, value=180.0
         )
         filter_state["Cutoff Frequency"] = wave_form.number_input(
             "Cutoff Frequency", min_value=0, max_value=1000, value=10
