@@ -77,6 +77,7 @@ class Main(ZeroPoleFilter):
                 filtered_waves_dft,
                 pole_zero,
                 filter_omega,
+                filter_phi
             ) = self.filter_waves(
                 raw_waves["Waves"], filter_state, wave_state["Sampling Frequency"]
             )
@@ -85,7 +86,25 @@ class Main(ZeroPoleFilter):
             self.plot_filtered_waves_dft(filtered_waves_dft, c2)
             self.plot_filter_omega(filter_omega, c2)
             self.plot_pole_zero(pole_zero, c1)
-
+            self.plot_filter_phi(filter_phi, c1)
+    
+    def plot_filter_phi(self, filter_phi, container):
+        container.subheader("Phase Response")
+        filter_phi_df = df(
+            {
+                "Phase": filter_phi["Phase"],
+                "Frequency": filter_phi["Frequency"],
+            }
+        )
+        filter_phi_fig = px.line(
+            filter_phi_df,
+            x="Frequency",
+            y="Phase",
+            color_discrete_sequence=[self.plot_color],
+        )
+        filter_phi_fig.update_layout(yaxis_title="Phase")
+        container.plotly_chart(filter_phi_fig, use_container_width=True)
+        
     def plot_pole_zero(self, pole_zero, container):
         container.subheader("Filter Pole Zero")
         pole_zero_df = df(
@@ -225,7 +244,7 @@ class Main(ZeroPoleFilter):
         wave_state["Sampling Frequency"] = wave_form.number_input(
             "Sampling Frequency",
             min_value=0,
-            max_value=1000,
+            max_value=50000,
             value=1000,
         )
         wave_state["Duration"] = wave_form.number_input(
@@ -244,12 +263,7 @@ class Main(ZeroPoleFilter):
         filter_state["Pole Radius"] = wave_form.number_input(
             "Pole Radius", min_value=0.0, max_value=1.0, value=0.5
         )
-        filter_state["Zero Radius"] = wave_form.number_input(
-            "Pole Radius", min_value=0.0, max_value=1.0, value=1.0
-        )
-        filter_state["Zero Angle"] = wave_form.number_input(
-            "Zero Angle", min_value=0.0, max_value=180.0, value=180.0
-        )
+        filter_state["Zero Radius"] = 1
         filter_state["Cutoff Frequency"] = wave_form.number_input(
             "Cutoff Frequency", min_value=0, max_value=1000, value=10
         )
