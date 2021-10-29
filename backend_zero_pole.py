@@ -30,12 +30,12 @@ def _dft(waves, fs):
 
 
 @jit(forceobj=True)
-def _filtered_waves(raw_waves, theta, r_pol, r_zero, fs, N):
+def _filtered_waves(raw_waves, theta, r_pol, r_zero, fs, N,k):
     coef = np.array(
         [
-            1,
-            2,
-            1,
+            1*k,
+            2*k,
+            1*k,
             2 * r_pol * np.cos(theta),
             -(r_pol ** 2),
         ]
@@ -53,7 +53,7 @@ def _filtered_waves(raw_waves, theta, r_pol, r_zero, fs, N):
 
 
 @jit(forceobj=True)
-def _filter_omega(theta, r_pol, r_zero, fs, N):
+def _filter_omega(theta, r_pol, r_zero, fs, N,k):
     n = np.arange(0, N).reshape(1, -1)
     f = n * fs / N
     omega = 2 * np.pi * n / N
@@ -62,7 +62,7 @@ def _filter_omega(theta, r_pol, r_zero, fs, N):
 
     # Zero
     zero_coef = np.array([-2 * r_zero * np.cos(np.pi), r_zero ** 2]).reshape(1, -1)
-    zero = 1 + np.dot(zero_coef, e_mat)
+    zero = (1 + np.dot(zero_coef, e_mat))*k
 
     # Pole
     pole_coef = np.array([-2 * r_pol * np.cos(theta), r_pol ** 2]).reshape(1, -1)
@@ -145,8 +145,13 @@ class ZeroPoleFilter:
         r_pol = filter_state["Pole Radius"]
         r_zero = filter_state["Zero Radius"]
         theta_zero = np.pi
+        if filter_state["Constant"]:
+            k = (1-2*r_pol*np.cos(theta)+r_pol**2)/4
+        else:
+            k=1
+         
         filtered_waves = _filtered_waves(
-            raw_waves, theta, r_pol, r_zero, fs, len(raw_waves)
+            raw_waves, theta, r_pol, r_zero, fs, len(raw_waves),k
         )
 
         # Get Filtered Waves DFT
@@ -170,6 +175,6 @@ class ZeroPoleFilter:
         }
 
         # Get H(omega)
-        filter_omega,filter_phi = _filter_omega(theta, r_pol, r_zero, fs, len(raw_waves))
+        filter_omega,filter_phi = _filter_omega(theta, r_pol, r_zero, fs, len(raw_waves),k)
 
         return filtered_waves, filtered_waves_dft, pole_zero, filter_omega,filter_phi

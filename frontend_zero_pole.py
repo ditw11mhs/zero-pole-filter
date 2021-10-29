@@ -267,6 +267,9 @@ class Main(ZeroPoleFilter):
         filter_state["Cutoff Frequency"] = wave_form.number_input(
             "Cutoff Frequency", min_value=0, max_value=1000, value=10
         )
+        filter_state["Constant"] =wave_form.checkbox(
+            "Constant", value=False
+        )
         wave_state["Submitted"] = wave_form.form_submit_button("Get Waves")
         return wave_state, filter_state
 
