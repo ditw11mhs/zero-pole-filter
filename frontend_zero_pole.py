@@ -24,16 +24,17 @@ class Main(ZeroPoleFilter):
         with c1.expander("LPF H(z)"):
             st.subheader("LPF H(z)")
             st.latex(
-                r"H(z) = \frac{(z+1)(z+1)}{(z-re^{\mathit{j\theta}})(z-re^{\mathit{-j\theta}})}"
+                r"H(z) = \frac{k(z+1)(z+1)}{(z-re^{\mathit{j\theta}})(z-re^{\mathit{-j\theta}})}"
             )
             st.latex(
-                r"= \frac{(z+1)(z+1)}{z^{2}-zr(e^{\mathit{j\theta}}+e^\mathit{-j\theta})+r^2}"
+                r"= \frac{k(z+1)(z+1)}{z^{2}-zr(e^{\mathit{j\theta}}+e^\mathit{-j\theta})+r^2}"
             )
             st.latex(
-                r"= \frac{z^2+2z+1}{z^{2}-zr(cos\theta+jsin\theta+cos\theta-jsin\theta)+r^2}"
+                r"= \frac{k(z^2+2z+1)}{z^{2}-zr(cos\theta+jsin\theta+cos\theta-jsin\theta)+r^2}"
             )
-            st.latex(r"= \frac{z^2+2z+1}{z^{2}-2zrcos\theta+r^2}")
-            st.latex(r"= \frac{1+2z^{-1}+z^{-2}}{1-2rcos\theta z^{-1}+r^{2}z^{-2}}")
+            st.latex(r"= \frac{k(z^2+2z+1)}{z^{2}-2zrcos\theta+r^2}")
+            st.latex(r"= \frac{k(1+2z^{-1}+z^{-2})}{1-2rcos\theta z^{-1}+r^{2}z^{-2}}")
+            st.latex(r"k =\frac{1-2rcos{\theta}+r^{2}}{4}   ")
 
         with c1.expander("Filter Equation"):
             st.subheader("Filter Equation")

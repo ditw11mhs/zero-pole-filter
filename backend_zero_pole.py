@@ -20,7 +20,9 @@ def _dft(waves, fs):
     e = np.exp(mat)
 
     dft_sum = np.sum(wave * e, axis=1)
-    wave_amplitude = np.absolute(dft_sum)
+    dft_sum_norm = dft_sum*2/N
+    dft_sum_norm[0]= dft_sum_norm[0]/2
+    wave_amplitude = np.absolute(dft_sum_norm)
     wave_amplitude = wave_amplitude
     wave_dft = {
         "Amplitude": np.array_split(wave_amplitude.flatten(), 2)[0],
@@ -86,7 +88,7 @@ def _filter_omega(theta, r_pol, r_zero, fs, N,k):
     pole_imag = np.imag(pole)
     pole_real = np.real(pole)
     
-    h_phi_2 = np.arctan(zero_imag/zero_real)-np.arctan(pole_imag/pole_real)
+    h_phi_2 = np.arctan(zero_imag/(zero_real+10e-32))-np.arctan(pole_imag/(pole_real+10e-32))
     return {
         "Gain": np.array_split(h_omega_abs.flatten(), 2)[0],
         "Frequency": np.array_split(f.flatten(), 2)[0],
